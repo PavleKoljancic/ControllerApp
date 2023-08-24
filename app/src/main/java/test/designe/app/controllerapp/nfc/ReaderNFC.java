@@ -63,13 +63,13 @@ public class ReaderNFC implements NfcAdapter.ReaderCallback{
                     //Pronalazak Usera
                     if(res[0]==-112&&res[1]==0) {
                         res = isoDep.transceive(commandApdu);
-                        int id = ByteBuffer.wrap(res).getInt();
                         isoDep.close();
-                        synchronized (idReadSubscribers)
-                        {
-                            idReadSubscribers.stream().parallel().forEach(sub-> sub.onIdRead(id));
+                        if(res.length==4) {
+                            int id = ByteBuffer.wrap(res).getInt();
+                            synchronized (idReadSubscribers) {
+                                idReadSubscribers.stream().parallel().forEach(sub -> sub.onIdRead(id));
+                            }
                         }
-
 
                     }
                 } catch (IOException e) {

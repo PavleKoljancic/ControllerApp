@@ -174,7 +174,7 @@ public class RouteFragment extends Fragment implements IdReadSubscriber {
     }
 
     private void loadScanInteractions() throws IOException {
-        List<ScanInterraction> gottenScans = api.getScanInteractions(currentRouteHistory.getPrimaryKey().getTerminalId(), 45L, TokenManager.bearer() + TokenManager.getInstance()).execute().body();
+        List<ScanInterraction> gottenScans = api.getScanInteractions(currentRouteHistory.getPrimaryKey().getTerminalId(), 45L, TokenManager.bearer() + TokenManager.getInstance().getToken()).execute().body();
         if (gottenScans != null && gottenScans.size() > 0)
             scanInterractions.addAll(gottenScans);
     }
