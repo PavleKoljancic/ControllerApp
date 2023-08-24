@@ -73,7 +73,7 @@ public class ReaderNFC implements NfcAdapter.ReaderCallback{
 
                     }
                 } catch (IOException e) {
-                    //KONEKCIJA IZGUBLJENA
+                    //KONEKCIJA
                 }
             }});
 
