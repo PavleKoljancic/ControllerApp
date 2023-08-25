@@ -114,8 +114,8 @@ public class RouteFragment extends Fragment implements IdReadSubscriber {
                         getActivity().getSupportFragmentManager().beginTransaction().replace(R.id.fragmentContainerView, parentFragment).commit();
                     }
                 });
-
-                builder.show();
+                builder.setCancelable(false);
+                builder.create().show();
 
 
             }

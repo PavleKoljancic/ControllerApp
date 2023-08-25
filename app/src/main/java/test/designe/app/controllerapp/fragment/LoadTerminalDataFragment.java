@@ -79,7 +79,7 @@ public class LoadTerminalDataFragment extends Fragment implements IdReadSubscrib
                         getActivity().finish();
                     }
                 });
-
+                builder.setCancelable(false);
 
                 AlertDialog dialog = builder.create();
                 dialog.show();
