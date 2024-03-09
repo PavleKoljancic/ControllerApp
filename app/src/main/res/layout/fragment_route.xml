@@ -2,6 +2,7 @@
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".fragment.RouteFragment">
@@ -14,32 +15,23 @@
             android:id="@+id/routeText"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
+            android:layout_marginTop="50dp"
+            android:layout_marginEnd="10dp"
+            android:maxWidth="230dp"
+            android:maxLines="3"
             android:scaleType="centerCrop"
             android:textAlignment="center"
-            android:textSize="34sp"
+            android:textColor="#262D52"
+            android:textSize="24sp"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="0.498"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/logoImage" />
-
-        <Button
-            android:id="@+id/exitButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="28dp"
-            android:backgroundTint="#8F0409"
-            android:text="Izađi"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="0.498"
-            app:layout_constraintStart_toStartOf="parent" />
+            app:layout_constraintStart_toEndOf="@+id/logoImage"
+            app:layout_constraintTop_toTopOf="parent" />
 
         <com.google.android.material.progressindicator.CircularProgressIndicator
             android:id="@+id/progressRoute"
             android:layout_width="100dp"
             android:layout_height="100dp"
-            android:layout_marginTop="5dp"
+            android:layout_marginTop="80dp"
             android:indeterminate="true"
             android:visibility="invisible"
             app:layout_constraintEnd_toEndOf="parent"
@@ -48,8 +40,8 @@
 
         <com.google.android.material.imageview.ShapeableImageView
             android:id="@+id/userImage"
-            android:layout_width="200dp"
-            android:layout_height="200dp"
+            android:layout_width="180dp"
+            android:layout_height="180dp"
             android:adjustViewBounds="true"
             android:padding="4dp"
             android:scaleType="centerCrop"
@@ -59,28 +51,20 @@
             app:layout_constraintTop_toBottomOf="@+id/progressRoute"
             app:shapeAppearanceOverlay="@style/ShapeAppearanceOverlay.App.CornerCut"
             app:strokeColor="?colorPrimary"
-            app:strokeWidth="3dp"
+            app:strokeWidth="5dp"
 
 
             tools:src="@drawable/no_profile_picture" />
-
-        <ImageView
-            android:id="@+id/statusImage"
-            android:layout_width="50dp"
-            android:layout_height="50dp"
-            android:visibility="invisible"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="0.504"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/canDriveText" />
 
         <TextView
             android:id="@+id/UserName"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="5dp"
+            android:layout_marginTop="10dp"
+            android:fontFamily="sans-serif-medium"
             android:textAlignment="center"
             android:textSize="24sp"
+            android:textStyle="bold"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/userImage" />
@@ -89,32 +73,92 @@
             android:id="@+id/canDriveText"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
             android:textAlignment="center"
             android:textSize="24sp"
             app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.501"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/UserName" />
-
-        <Button
-            android:id="@+id/nextBtn"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="5dp"
-            android:text="Dalje"
-            android:visibility="invisible"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/statusImage" />
 
         <ImageView
             android:id="@+id/logoImage"
             android:layout_width="120dp"
             android:layout_height="120dp"
+            android:layout_marginStart="5dp"
             android:layout_marginTop="10dp"
             android:src="@drawable/icon_no_bg"
-            app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
+
+        <com.google.android.material.slider.Slider
+            android:id="@+id/slider"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="40dp"
+            android:layout_marginEnd="40dp"
+            android:stepSize="5"
+            android:value="45"
+            android:valueFrom="20"
+            android:valueTo="120"
+            app:layout_constraintBottom_toTopOf="@+id/timeText"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.0"
+            app:layout_constraintStart_toStartOf="parent"></com.google.android.material.slider.Slider>
+
+        <LinearLayout
+            android:id="@+id/linearLayout"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:baselineAligned="false"
+            android:gravity="center_horizontal"
+            android:orientation="horizontal"
+            android:paddingBottom="30dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent">
+
+            <Button
+                android:id="@+id/nextBtn"
+                android:layout_width="150dp"
+                android:layout_height="wrap_content"
+                android:layout_margin="10dp"
+                android:text="Dalje"
+                android:visibility="gone"
+                app:icon="@drawable/next"
+                app:iconPadding="0dp"
+                app:iconSize="20dp" />
+
+            <Button
+                android:id="@+id/qr_button"
+                android:layout_width="150dp"
+                android:layout_height="wrap_content"
+                android:layout_margin="10dp"
+                android:text="Skeniraj"
+                app:icon="@drawable/qr_code"
+                app:iconSize="20dp" />
+
+            <Button
+                android:id="@+id/exitButton"
+                android:layout_width="150dp"
+                android:layout_height="wrap_content"
+                android:layout_margin="10dp"
+                android:backgroundTint="#8F0409"
+                android:outlineAmbientShadowColor="#8E0409"
+                android:text="Izađi" />
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/timeText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="10dp"
+            android:text="45 min"
+            android:textSize="20sp"
+            app:layout_constraintBottom_toTopOf="@+id/linearLayout"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.498"
+            app:layout_constraintStart_toStartOf="parent" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 </FrameLayout>

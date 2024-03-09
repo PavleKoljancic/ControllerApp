@@ -8,8 +8,12 @@ import android.os.Handler;
 import android.os.HandlerThread;
 
 import java.io.IOException;
+import java.math.BigInteger;
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import java.util.HashSet;
+
+import test.designe.app.controllerapp.fragment.RouteFragment;
 
 public class ReaderNFC implements NfcAdapter.ReaderCallback{
     static byte [] aid = {(byte)0xF0,0x01,0x02,0x03,0x04,0x05,0x06};
@@ -26,6 +30,7 @@ public class ReaderNFC implements NfcAdapter.ReaderCallback{
     Activity parentActivity;
 
     HashSet<IdReadSubscriber> idReadSubscribers;
+    HashSet<UserStringReadSubscriber> userStringReadSubscribers;
 
     public ReaderNFC(HandlerThread handlerThread, Activity activity)
     {
@@ -33,6 +38,8 @@ public class ReaderNFC implements NfcAdapter.ReaderCallback{
         this.parentActivity =activity;
         this.handlerThread = handlerThread;
         idReadSubscribers = new HashSet<IdReadSubscriber>(3);
+        userStringReadSubscribers = new HashSet<UserStringReadSubscriber>(3);
+
     }
     @Override
     public void onTagDiscovered(Tag tag) {
@@ -64,10 +71,13 @@ public class ReaderNFC implements NfcAdapter.ReaderCallback{
                     if(res[0]==-112&&res[1]==0) {
                         res = isoDep.transceive(commandApdu);
                         isoDep.close();
-                        if(res.length==4) {
-                            int id = ByteBuffer.wrap(res).getInt();
+                        if(res.length>=10) {
+
+                            String userString = new String(res, StandardCharsets.US_ASCII);
+
+
                             synchronized (idReadSubscribers) {
-                                idReadSubscribers.stream().parallel().forEach(sub -> sub.onIdRead(id));
+                                userStringReadSubscribers.stream().parallel().forEach(sub -> sub.onOnUserStringReadRead(userString));
                             }
                         }
 
@@ -114,5 +124,20 @@ public class ReaderNFC implements NfcAdapter.ReaderCallback{
         {
             this.idReadSubscribers.remove(sub);
         }
+    }
+
+    public void subscribeToUserStringRead(UserStringReadSubscriber sub) {
+        synchronized (this.userStringReadSubscribers)
+        {
+            this.userStringReadSubscribers.add(sub);
+        }
+
+    }
+    public void unsubscribeToUserStringRead(UserStringReadSubscriber sub) {
+        synchronized (this.userStringReadSubscribers)
+        {
+            this.userStringReadSubscribers.remove(sub);
+        }
+
     }
 }

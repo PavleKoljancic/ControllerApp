@@ -4,7 +4,11 @@
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.NFC" />
+    <uses-permission android:name="android.permission.CAMERA" />
     <uses-feature android:name="android.hardware.nfc.hce"
+        android:required="true" />
+    <uses-feature
+        android:name="android.hardware.camera"
         android:required="true" />
 
     <application
@@ -16,6 +20,7 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.ControllerApp"
+        android:hardwareAccelerated="true"
         android:usesCleartextTraffic="true"
         tools:targetApi="31" >
         <service
@@ -46,6 +51,12 @@
             </intent-filter>
 
         </activity>
+        <activity
+            android:name=".CaptureAct"
+            android:exported="false"
+            android:screenOrientation="portrait"
+            android:stateNotNeeded="true"
+            android:theme="@style/zxing_CaptureTheme"/>
     </application>
 
 </manifest>

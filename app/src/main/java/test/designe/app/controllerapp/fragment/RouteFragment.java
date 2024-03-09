@@ -1,15 +1,19 @@
 package test.designe.app.controllerapp.fragment;
 
 import android.content.DialogInterface;
+import android.content.res.ColorStateList;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.os.Bundle;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.Fragment;
 
 import android.os.Handler;
 import android.os.HandlerThread;
+import android.view.DragEvent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -20,11 +24,16 @@ import android.widget.TextView;
 import com.google.android.material.imageview.ShapeableImageView;
 import com.google.android.material.progressindicator.CircularProgressIndicator;
 import com.google.android.material.progressindicator.LinearProgressIndicator;
+import com.google.android.material.slider.Slider;
+import com.journeyapps.barcodescanner.ScanContract;
+import com.journeyapps.barcodescanner.ScanOptions;
 
 import java.io.IOException;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
 
+import test.designe.app.controllerapp.CaptureAct;
 import test.designe.app.controllerapp.R;
 import test.designe.app.controllerapp.nfc.IdReadSubscriber;
 import test.designe.app.controllerapp.nfc.ReaderNFC;
@@ -33,11 +42,12 @@ import test.designe.app.controllerapp.models.Route;
 import test.designe.app.controllerapp.models.RouteHistory;
 import test.designe.app.controllerapp.models.ScanInterraction;
 import test.designe.app.controllerapp.models.User;
+import test.designe.app.controllerapp.nfc.UserStringReadSubscriber;
 import test.designe.app.controllerapp.retrofit.ControllerAPI;
 import test.designe.app.controllerapp.retrofit.RetrofitService;
 
 
-public class RouteFragment extends Fragment implements IdReadSubscriber {
+public class RouteFragment extends Fragment implements UserStringReadSubscriber {
 
     List<ScanInterraction> scanInterractions;
     HandlerThread handlerThread;
@@ -53,10 +63,12 @@ public class RouteFragment extends Fragment implements IdReadSubscriber {
 
 
     TextView canDriveTextView;
-    ImageView aprovalImageView;
+
     TextView UserNametext;
     ShapeableImageView userImage;
     Button nextBtn;
+    Button qrBtn;
+    long time=45l;
 
 
 
@@ -80,7 +92,7 @@ public class RouteFragment extends Fragment implements IdReadSubscriber {
             loadInitial();
             readerNFC = new ReaderNFC(handlerThread, getActivity());
             readerNFC.enableReaderMode();
-            readerNFC.subscribeToIdRead(this);
+            readerNFC.subscribeToUserStringRead(this);
         });
 
 
@@ -90,9 +102,27 @@ public class RouteFragment extends Fragment implements IdReadSubscriber {
         canDriveTextView = (TextView) getView().findViewById(R.id.canDriveText);
         UserNametext = getView().findViewById(R.id.UserName);
         userImage = getView().findViewById(R.id.userImage);
-        aprovalImageView = (ImageView) getView().findViewById(R.id.statusImage);
         routeProgress = (CircularProgressIndicator) getView().findViewById(R.id.progressRoute);
         nextBtn = (Button) getView().findViewById(R.id.nextBtn);
+        qrBtn = (Button)  getView().findViewById(R.id.qr_button);
+        Slider timeSlider = (Slider) getView().findViewById(R.id.slider);
+        TextView timeText =  (TextView) getView().findViewById(R.id.timeText);
+
+        timeSlider.addOnChangeListener(new Slider.OnChangeListener() {
+            @Override
+            public void onValueChange(@NonNull Slider slider, float value, boolean fromUser) {
+                time = (long)timeSlider.getValue();
+                timeText.setText(time+" min");
+            }
+        });
+
+
+        qrBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                scanCode();
+            }
+        });
 
 
         exitButton.setOnClickListener(new View.OnClickListener() {
@@ -132,10 +162,10 @@ public class RouteFragment extends Fragment implements IdReadSubscriber {
     }
 
     private void enableNextUserToLoad() {
-        nextBtn.setVisibility(View.INVISIBLE);
+        nextBtn.setVisibility(View.GONE);
         userImage.setVisibility(View.INVISIBLE);
+        qrBtn.setVisibility(View.VISIBLE);
         canDriveTextView.setVisibility(View.INVISIBLE);
-        aprovalImageView.setVisibility(View.INVISIBLE);
         UserNametext.setText("");
         readerNFC.enableReaderMode();
 
@@ -174,7 +204,7 @@ public class RouteFragment extends Fragment implements IdReadSubscriber {
     }
 
     private void loadScanInteractions() throws IOException {
-        List<ScanInterraction> gottenScans = api.getScanInteractions(currentRouteHistory.getPrimaryKey().getTerminalId(), 45L, TokenManager.bearer() + TokenManager.getInstance().getToken()).execute().body();
+        List<ScanInterraction> gottenScans = api.getScanInteractions(currentRouteHistory.getPrimaryKey().getTerminalId(), 120, TokenManager.bearer() + TokenManager.getInstance().getToken()).execute().body();
         if (gottenScans != null && gottenScans.size() > 0)
             scanInterractions.addAll(gottenScans);
     }
@@ -195,8 +225,9 @@ public class RouteFragment extends Fragment implements IdReadSubscriber {
         this.parentFragment = parentFragment;
     }
 
-    private void checkUser(String UserId) {
+    private void checkUser(String UserString) {
 
+        String UserId = UserString.split("\\.")[0];
 
         User user = null;
         try {
@@ -217,14 +248,15 @@ public class RouteFragment extends Fragment implements IdReadSubscriber {
         final User result = user;
         final byte[] pBytes = pictureBytes;
         final boolean canDrive;
-        if (!scanInterractions.stream().anyMatch(s -> s.getId().getUserId() == result.getId()))
+        if (!scanInterractions.stream().filter(i->i.getId().getTime().after(new Timestamp(System.currentTimeMillis()-time*60*1000))).anyMatch(s -> s.getId().getUserId() == result.getId()))
             try {
                 loadScanInteractions();
             } catch (IOException e) {
             }
-        canDrive = scanInterractions.stream().anyMatch(s -> s.getId().getUserId() == result.getId());
+        canDrive = scanInterractions.stream().filter(i->i.getId().getTime().after(new Timestamp(System.currentTimeMillis()-time*60*1000))).anyMatch(s -> s.getId().getUserId() == result.getId());
         getActivity().runOnUiThread(() ->
         {
+            qrBtn.setVisibility(View.GONE);
             routeProgress.setVisibility(View.INVISIBLE);
             nextBtn.setVisibility(View.VISIBLE);
 
@@ -250,23 +282,27 @@ public class RouteFragment extends Fragment implements IdReadSubscriber {
         }
 
         userImage.setVisibility(View.VISIBLE);
+
         canDriveTextView.setVisibility(View.VISIBLE);
         if (canDrive) {
 
-            canDriveTextView.setTextColor(Color.GREEN);
+            canDriveTextView.setTextColor(Color.parseColor("#4bae4f"));
+
+            userImage.setStrokeColor(ColorStateList.valueOf(Color.parseColor("#4bae4f")));
             canDriveTextView.setText("Ima validnu kartu");
 
-            aprovalImageView.setImageDrawable(getResources().getDrawable(R.drawable.aproved));
+
 
         } else {
 
-            canDriveTextView.setTextColor(Color.RED);
+            canDriveTextView.setTextColor(Color.parseColor("#FF8E0409"));
+            userImage.setStrokeColor(ColorStateList.valueOf(Color.parseColor("#FF8E0409")));
             canDriveTextView.setText("Nema validnu kartu");
 
-            aprovalImageView.setImageDrawable(getResources().getDrawable(R.drawable.rejected));
+
 
         }
-        aprovalImageView.setVisibility(View.VISIBLE);
+
     }
 
     public void userNotFound() {
@@ -276,12 +312,12 @@ public class RouteFragment extends Fragment implements IdReadSubscriber {
     }
 
     @Override
-    public void onIdRead(Integer id) {
+    public void onOnUserStringReadRead(String UserString) {
         readerNFC.disableReaderMode();
-        if (id > 0)
+
             handler.post(() -> {
 
-                checkUser("" + id);
+                checkUser(UserString);
             });
     }
 
@@ -292,4 +328,38 @@ public class RouteFragment extends Fragment implements IdReadSubscriber {
         readerNFC.disableReaderMode();
         super.onDestroy();
     }
+
+    private void scanCode() {
+
+        ScanOptions options = new ScanOptions();
+        options.setBeepEnabled(true);
+        options.setOrientationLocked(true);
+
+        options.setCaptureActivity(CaptureAct.class);
+
+        barLauncher.launch(options);
+
+
+
+    }
+
+
+    ActivityResultLauncher<ScanOptions> barLauncher = registerForActivityResult( new ScanContract() , result ->  {
+
+
+
+        if(result.getContents()!=null)
+        {
+            handler.post(() -> {
+
+                checkUser(result.getContents());
+            });
+
+        }
+        else
+        {
+            userNotFound();
+        }
+
+    });
 }
