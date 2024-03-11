@@ -13,17 +13,14 @@ import androidx.fragment.app.Fragment;
 
 import android.os.Handler;
 import android.os.HandlerThread;
-import android.view.DragEvent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
-import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.google.android.material.imageview.ShapeableImageView;
 import com.google.android.material.progressindicator.CircularProgressIndicator;
-import com.google.android.material.progressindicator.LinearProgressIndicator;
 import com.google.android.material.slider.Slider;
 import com.journeyapps.barcodescanner.ScanContract;
 import com.journeyapps.barcodescanner.ScanOptions;
@@ -35,7 +32,6 @@ import java.util.List;
 
 import test.designe.app.controllerapp.CaptureAct;
 import test.designe.app.controllerapp.R;
-import test.designe.app.controllerapp.nfc.IdReadSubscriber;
 import test.designe.app.controllerapp.nfc.ReaderNFC;
 import test.designe.app.controllerapp.TokenManager;
 import test.designe.app.controllerapp.models.Route;
@@ -68,8 +64,13 @@ public class RouteFragment extends Fragment implements UserStringReadSubscriber 
     ShapeableImageView userImage;
     Button nextBtn;
     Button qrBtn;
-    long time=45l;
+    long time=15l;
 
+
+    //User data
+
+    User user = null;
+    byte[] pictureBytes = null;
 
 
     ReaderNFC readerNFC;
@@ -113,6 +114,11 @@ public class RouteFragment extends Fragment implements UserStringReadSubscriber 
             public void onValueChange(@NonNull Slider slider, float value, boolean fromUser) {
                 time = (long)timeSlider.getValue();
                 timeText.setText(time+" min");
+                if(user!=null && pictureBytes!=null)
+                {
+                    userDrivingUiUpdate(canUserDrive(user));
+                }
+
             }
         });
 
@@ -162,6 +168,8 @@ public class RouteFragment extends Fragment implements UserStringReadSubscriber 
     }
 
     private void enableNextUserToLoad() {
+        user=null;
+        pictureBytes=null;
         nextBtn.setVisibility(View.GONE);
         userImage.setVisibility(View.INVISIBLE);
         qrBtn.setVisibility(View.VISIBLE);
@@ -229,13 +237,15 @@ public class RouteFragment extends Fragment implements UserStringReadSubscriber 
 
         String UserId = UserString.split("\\.")[0];
 
-        User user = null;
+        user = null;
+        pictureBytes = null;
+
         try {
             user = api.getUserById(UserId, TokenManager.bearer() + TokenManager.getInstance().getToken()).execute().body();
         } catch (IOException e) {
 
         }
-        byte[] pictureBytes = null;
+
         if (user != null && user.getPictureHash() != null) {
 
             try {
@@ -248,12 +258,12 @@ public class RouteFragment extends Fragment implements UserStringReadSubscriber 
         final User result = user;
         final byte[] pBytes = pictureBytes;
         final boolean canDrive;
-        if (!scanInterractions.stream().filter(i->i.getId().getTime().after(new Timestamp(System.currentTimeMillis()-time*60*1000))).anyMatch(s -> s.getId().getUserId() == result.getId()))
+        if (!canUserDrive(result))
             try {
                 loadScanInteractions();
             } catch (IOException e) {
             }
-        canDrive = scanInterractions.stream().filter(i->i.getId().getTime().after(new Timestamp(System.currentTimeMillis()-time*60*1000))).anyMatch(s -> s.getId().getUserId() == result.getId());
+        canDrive = canUserDrive(result);
         getActivity().runOnUiThread(() ->
         {
             qrBtn.setVisibility(View.GONE);
@@ -269,6 +279,10 @@ public class RouteFragment extends Fragment implements UserStringReadSubscriber 
         });
     }
 
+    private boolean canUserDrive(User user)
+    {
+        return scanInterractions.stream().filter(i->i.getId().getTime().after(new Timestamp(System.currentTimeMillis()-time*60*1000))).anyMatch(s -> s.getId().getUserId() == user.getId());
+    }
     private void userFound(User result, byte[] pBytes, boolean canDrive) {
         UserNametext.setText(result.getFirstName() + " " + result.getLastName());
 
@@ -284,26 +298,30 @@ public class RouteFragment extends Fragment implements UserStringReadSubscriber 
         userImage.setVisibility(View.VISIBLE);
 
         canDriveTextView.setVisibility(View.VISIBLE);
+        userDrivingUiUpdate(canDrive);
+
+    }
+
+    private void userDrivingUiUpdate(boolean canDrive) {
         if (canDrive) {
 
-            canDriveTextView.setTextColor(Color.parseColor("#4bae4f"));
-
-            userImage.setStrokeColor(ColorStateList.valueOf(Color.parseColor("#4bae4f")));
-            canDriveTextView.setText("Ima validnu kartu");
-
+            userCanDriveUiUpdate("#4bae4f", "Ima validnu kartu");
 
 
         } else {
 
-            canDriveTextView.setTextColor(Color.parseColor("#FF8E0409"));
-            userImage.setStrokeColor(ColorStateList.valueOf(Color.parseColor("#FF8E0409")));
-            canDriveTextView.setText("Nema validnu kartu");
-
+            userCanDriveUiUpdate("#FF8E0409", "Nema validnu kartu");
 
 
         }
-
     }
+
+    private void userCanDriveUiUpdate(String colorString, String Nema_validnu_kartu) {
+        canDriveTextView.setTextColor(Color.parseColor(colorString));
+        userImage.setStrokeColor(ColorStateList.valueOf(Color.parseColor(colorString)));
+        canDriveTextView.setText(Nema_validnu_kartu);
+    }
+
 
     public void userNotFound() {
         UserNametext.setText("Korisnik nije pronađen");
